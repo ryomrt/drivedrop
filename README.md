@@ -32,8 +32,6 @@ Google Apps Script (GAS) と Google Drive だけで動く、サーバーレス�
 * ドライブのフォルダは「リンクを知っている全員が閲覧可」に設定する必要があります。個人情報や極めてプライベートな写真の共有には使用しないでください。
 * **推奨運用**: イベント終了後、数日〜1週間程度でGASの公開を停止し、ドライブの共有設定をオフにすることを強くお勧めします。
 
-
-
 ## ✨ 主な機能と特徴
 
 * **📱 ログイン不要**: 参加者はGoogleアカウントを持っていなくてもアップロード可能です。
@@ -41,8 +39,6 @@ Google Apps Script (GAS) と Google Drive だけで動く、サーバーレス�
 * **⚡️ 圧倒的な「直結感」 (Optimistic UI)**: 送信した瞬間に、自分の画面に写真がポンッと追加される演出により、待ち時間のストレスがありません。
 * **⚙️ メンテナンスが超簡単**: HTML/JSの知識がなくても、`Config.gs` のテキストを書き換えるだけで、イベント名やメッセージ、デザインをカスタマイズできます。
 * **🔄 QRコードでかんたん拡散**: ボタンを押すとページ上にQRコードが表示され、参加者同士でURLを教え合うことなく簡単にシェアできます。
-
----
 
 ## 🛠️ 導入手順 (セットアップ)
 
@@ -90,18 +86,17 @@ Google Apps Script (GAS) と Google Drive だけで動く、サーバーレス�
 1. デプロイ完了画面に表示される **ウェブアプリのURL**（最後が `/exec` で終わるURL）にアクセスして、動作確認を行います。
 2. 画面上の「📲 友達に教える」ボタンを押すとQRコードが表示されます。**このQRコードをスクリーンショットして、参加者に配布・案内してください！**
 
----
 
 ## 🔧 設定を変更した時のアップデート手順
 
-`Config.gs` の文字を変えたりコードを修正した後は、以下の手順でバージョンアップを行わないと画面に反映されません。
+`Config.gs` の文字を変えたり、コードを修正した後は、以下の手順でバージョンアップを行わないと画面に反映されません。
 
 1. エディタ画面右上の青いボタン **「デプロイ」** ＞ **「デプロイを管理」** をクリック。
 2. 対象のデプロイを選択し、右上の **「🖊（編集）」** アイコンをクリック。
 3. バージョン欄のプルダウンから **「新バージョン」** を選択。
 4. **「デプロイ」** をクリック。
 
-※この手順で更新すれば公開URLは変わらないため、**一度印刷したQRコードを作り直す必要はありません。**
+※この手順で更新すれば公開URLは変わらないため、**作ったQRコードは再利用できます。**
 
 ---
 
@@ -116,6 +111,7 @@ Google Apps Script (GAS) と Google Drive だけで動く、サーバーレス�
 ## 📄 ライセンス
 
 MIT License
+
 ご自由に改変・再配布してご活用ください。
 
 ## 🤝 Credits & Acknowledgements
@@ -123,13 +119,11 @@ MIT License
 本プロジェクトは、以下の素晴らしいオープンソースやサービスを利用して構築されています。
 
 * **Fonts**
-* [Noto Sans JP](https://fonts.google.com/specimen/Noto+Sans+JP) (Licensed under the SIL Open Font License 1.1)
-
+   * [Noto Sans JP](https://fonts.google.com/specimen/Noto+Sans+JP) (Licensed under the SIL Open Font License 1.1)
 
 * **API Services**
-* [QR Code API](https://goqr.me/api/) by goqr.me (Used for generating QR codes dynamically)
-
+   * [QR Code API](https://goqr.me/api/) by goqr.me (Used for generating QR codes dynamically)
 
 * **Icons**
-* GitHub icon provided by [Primer Octicons](https://primer.style/octicons/) (Licensed under the MIT License)
+   * GitHub icon provided by [Primer Octicons](https://primer.style/octicons/) (Licensed under the MIT License)
 
