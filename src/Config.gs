@@ -15,7 +15,7 @@ const CONFIG = {
   // ==========================================
   UI_TEXT: {
     // 画面上部
-    DESCRIPTION: "最高の瞬間をシェアしよう！<br>複数枚まとめて選べます",
+    DESCRIPTION: "最高の瞬間をシェアしよう！<br>複数枚まとめて選べます（1度に30枚までアップできます）",
     
     // 写真選択エリア
     DROPZONE_MAIN: "ここをタップして写真を選択",
@@ -51,11 +51,15 @@ const CONFIG = {
     MSG_RELOAD: "⏳ 更新中...",
     BTN_UPLOAD_AGAIN: "もっと写真を送る",
 
-    // 💡 今回追加：QRコードシェア機能のテキスト
+    // コードシェア機能のテキスト
     BTN_SHARE_QR: "📲 友達に教える (QRコード)",
     MODAL_QR_TITLE: "友達を招待する",
     MODAL_QR_NOTE: "このQRコードをカメラで読み取ってもらってね！",
     MODAL_BTN_CLOSE: "閉じる",
+
+    // アップロード制限の設定（タイムアウト対策）
+    MAX_FILES: 30, // 一度に選択できる最大枚数
+    MSG_LIMIT: "⚠️ 1回で送れるのは30枚までです！超えた分はキャンセルしました🙏",
 
     // ページ最下部のお問い合わせ先（HTMLタグが使えます）
     CONTACT_MESSAGE: "お困りのことがあれば 運営メンバー <a href='mailto:[EMAIL_ADDRESS]'>[EMAIL_ADDRESS]</a> まで！"
