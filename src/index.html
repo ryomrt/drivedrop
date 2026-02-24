@@ -125,6 +125,7 @@
             width: 100%;
             aspect-ratio: 1 / 1;
             display: inline-block;
+            border-radius: 8px;
         }
 
         .thumb {
@@ -134,6 +135,33 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             border: 1px solid #eee;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* 💡 追加：回転（くるくる）ボタン。誤タップ防止で左下に配置 */
+        .rotate-btn {
+            position: absolute;
+            bottom: -6px;
+            left: -6px;
+            background: rgba(50, 50, 50, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            line-height: 28px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background 0.2s, transform 0.2s;
+            z-index: 10;
+        }
+
+        .rotate-btn:hover {
+            background: #FF9800;
+            transform: scale(1.1);
         }
 
         .remove-btn {
@@ -153,9 +181,7 @@
             padding: 0;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            z-index: 10;
         }
 
         .remove-btn:hover {
@@ -626,7 +652,8 @@
         const WEB_APP_URL = "<?!= webAppUrl ?>";
 
         const MAX_SIZE = 1200;
-        let selectedFiles = [];
+        let selectedFiles = []; // 💡 変更：中身が { file: File, angle: 0 } のオブジェクトになります
+
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
 
@@ -638,9 +665,11 @@
         dropZone.addEventListener('drop', handleDrop, false);
         function handleDrop(e) { fileInput.files = e.dataTransfer.files; updateSelectedFiles(e.dataTransfer.files); }
 
-        // 💡 変更：上書きではなく「追記（concat）」にし、上限チェックを追加
         function updateSelectedFiles(files) {
-            const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+            // 💡 変更：ただのファイルではなく、角度（angle）を管理する箱に入れて追加
+            const newFiles = Array.from(files)
+                .filter(file => file.type.startsWith('image/'))
+                .map(file => ({ file: file, angle: 0 }));
 
             selectedFiles = selectedFiles.concat(newFiles);
 
@@ -650,9 +679,7 @@
                 selectedFiles = selectedFiles.slice(0, maxLimit);
             }
 
-            // 同じ画像を連続で選べるようにするため、inputの中身を空にする
             fileInput.value = '';
-
             showPreviews();
         }
 
@@ -667,7 +694,7 @@
                 statusDiv.innerHTML = '';
             }
 
-            selectedFiles.forEach((file, index) => {
+            selectedFiles.forEach((item, index) => {
                 const container = document.createElement('div');
                 container.className = 'thumb-container';
                 previewArea.appendChild(container);
@@ -675,19 +702,39 @@
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     const img = document.createElement('img');
+                    img.id = 'thumb-img-' + index;
                     img.src = e.target.result;
                     img.className = 'thumb';
+                    // 記録されている角度をプレビューに反映
+                    img.style.transform = `rotate(${item.angle}deg)`;
 
+                    // 削除ボタン (右上)
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'remove-btn';
                     removeBtn.innerHTML = '✕';
                     removeBtn.onclick = function () { removeFile(index); };
 
+                    // 💡 追加：回転（くるくる）ボタン (左下)
+                    const rotateBtn = document.createElement('button');
+                    rotateBtn.className = 'rotate-btn';
+                    rotateBtn.innerHTML = '↻';
+                    rotateBtn.onclick = function () { rotateFile(index); };
+
                     container.appendChild(img);
                     container.appendChild(removeBtn);
+                    container.appendChild(rotateBtn);
                 }
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(item.file);
             });
+        }
+
+        // 💡 追加：画像をくるくる回す（見た目だけの更新でサクサク！）
+        function rotateFile(index) {
+            selectedFiles[index].angle = (selectedFiles[index].angle + 90) % 360;
+            const img = document.getElementById('thumb-img-' + index);
+            if (img) {
+                img.style.transform = `rotate(${selectedFiles[index].angle}deg)`;
+            }
         }
 
         function removeFile(index) {
@@ -695,24 +742,47 @@
             showPreviews();
         }
 
-        function compressImage(file, callback) {
+        // 💡 変更：回転している場合は、送る前に本当にピクセルデータを回転させる
+        function processImage(item, quality, callback) {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const img = new Image();
                 img.onload = function () {
                     const canvas = document.createElement('canvas');
-                    let width = img.width; let height = img.height;
-                    if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
-                    else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-                    canvas.width = width; canvas.height = height;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (quality === 'compress') {
+                        if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
+                        else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                    }
+
+                    // 90度か270度回転している時は、Canvasの縦横比を逆にする
+                    if (item.angle === 90 || item.angle === 270) {
+                        canvas.width = height;
+                        canvas.height = width;
+                    } else {
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
+
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const fullDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    callback(fullDataUrl.split(',')[1], 'image/jpeg', fullDataUrl);
+
+                    // 中心に移動して回転し、描画するマジック！
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate(item.angle * Math.PI / 180);
+                    ctx.drawImage(img, -width / 2, -height / 2, width, height);
+
+                    const compressionRate = quality === 'compress' ? 0.8 : 1.0;
+                    // PNGの場合はPNGのまま、それ以外はJPEGで出力
+                    const outType = item.file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    const fullDataUrl = canvas.toDataURL(outType, compressionRate);
+
+                    callback(fullDataUrl.split(',')[1], outType, fullDataUrl);
                 }
                 img.src = e.target.result;
             }
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(item.file);
         }
 
         function showConfirmModal() {
@@ -779,9 +849,9 @@
                     return;
                 }
 
-                const file = selectedFiles[index];
+                const item = selectedFiles[index];
 
-                const sendToGAS = (base64Data, fileName, mimeType, fullDataUrl) => {
+                const sendToGAS = (base64Data, mimeType, fullDataUrl, originalFileName) => {
                     google.script.run
                         .withSuccessHandler(function (result) {
                             if (result === 'success') {
@@ -810,22 +880,25 @@
                             statusDiv.innerHTML = `❌ 通信エラー: ${error}`;
                             resetUploadUI();
                         })
-                        .uploadFile(base64Data, fileName, mimeType);
+                        .uploadFile(base64Data, originalFileName, mimeType);
                 };
 
-                if (qualityOption === 'compress') {
-                    compressImage(file, function (base64Data, mimeType, fullDataUrl) {
-                        const newFileName = file.name.split('.')[0] + '_compressed.jpg';
-                        sendToGAS(base64Data, newFileName, mimeType, fullDataUrl);
+                // 💡 変更：圧縮設定、もしくは「回転」が指定されている場合はCanvasを通して書き出す
+                if (qualityOption === 'compress' || item.angle !== 0) {
+                    processImage(item, qualityOption, function (base64Data, mimeType, fullDataUrl) {
+                        const extension = mimeType === 'image/png' ? '.png' : '.jpg';
+                        const newFileName = item.file.name.split('.')[0] + '_processed' + extension;
+                        sendToGAS(base64Data, mimeType, fullDataUrl, newFileName);
                     });
                 } else {
+                    // 回転も圧縮もしない完全オリジナルデータ
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         const fullDataUrl = e.target.result;
                         const base64Data = fullDataUrl.split(',')[1];
-                        sendToGAS(base64Data, file.name, file.type, fullDataUrl);
+                        sendToGAS(base64Data, item.file.type, fullDataUrl, item.file.name);
                     };
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(item.file);
                 }
             }
             uploadNext(0);
